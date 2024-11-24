@@ -7,47 +7,47 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig {
+public class SecurityConfig   {
 
     @Autowired
     private UserService userService;
 
-    // HTTP güvenlik yapılandırması
-    @Override
+    //@Override
     protected void configure(HttpSecurity http) throws Exception {
-        http
-                .csrf().disable()  // CSRF korumasını devre dışı bırak (API kullanıyorsanız)
-                .authorizeHttpRequests()  // authorizeRequests() yerine authorizeHttpRequests() kullanın
-                .requestMatchers("/api/auth/**").permitAll()  // Giriş ve kayıt API'leri herkese açık
-                .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")  // Kullanıcı ve admin rolleri için
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")  // Yalnızca admin rolü
+        http.csrf().disable()
+                .authorizeRequests()
+                .antMatchers("/api/auth/**").permitAll()  // Giriş ve kayıt API'leri herkese açık
+                .antMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")  // Kullanıcı ve admin rolleri için
+                .antMatchers("/api/admin/**").hasRole("ADMIN")  // Yalnızca admin rolü
                 .anyRequest().authenticated()  // Diğer her şey için kimlik doğrulama gerekli
                 .and()
-                .httpBasic();  // Basic Authentication
+                .httpBasic();  // HTTP Basic Authentication kullanıyoruz
     }
 
-    // UserDetailsService yapılandırması
+    //@Override
     @Bean
     public UserDetailsService userDetailsService() {
-        return username -> userService.findByUsername(username)
+        // Kullanıcıyı username ile buluyoruz
+        return username -> (UserDetails) userService.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
-    // Şifre encoder yapılandırması
     @Bean
     public PasswordEncoder passwordEncoder() {
+        // BCryptPasswordEncoder kullanarak şifreleme yapıyoruz
         return new BCryptPasswordEncoder();
     }
 
-    // DaoAuthenticationProvider yapılandırması
     @Bean
     public DaoAuthenticationProvider authProvider() {
+        // Kullanıcı doğrulama sağlayıcısını oluşturuyoruz
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(userDetailsService());
         provider.setPasswordEncoder(passwordEncoder());

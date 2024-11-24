@@ -12,7 +12,6 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-
 @Service
 public class UserService {
 
@@ -20,35 +19,26 @@ public class UserService {
     private UserRepository userRepository;
 
     @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
+    private BCryptPasswordEncoder passwordEncoder;  // BCryptPasswordEncoder'ı burada kullanıyoruz
 
     @Autowired
     private RoleService roleService;
 
-    // Yeni kullanıcı kaydı
+    // Yeni kullanıcı kaydetme
     @Transactional
     public User registerNewUser(User user) {
         // Şifreyi şifrele
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-        // Varsayılan "USER" rolünü al
-        Role userRole = roleService.getRoleByName("USER");
-
-        if (userRole == null) {
-            // Eğer "USER" rolü yoksa, rolü oluştur ve veritabanına kaydet
-            userRole = new Role();
-            userRole.setName("USER");
-            roleService.saveRole(userRole);  // Bu metodun eklenmesi gerektiğini unutma!
-        }
-
+        // Varsayılan rol ekleme (örneğin USER rolü)
         Set<Role> roles = new HashSet<>();
-        roles.add(userRole);  // Rolü kullanıcıya ekle
+        roles.add(roleService.getRoleByName("USER"));
         user.setRoles(roles);
 
-        return userRepository.save(user);  // Kullanıcıyı kaydet
+        return userRepository.save(user);
     }
 
-    // Kullanıcı adıyla kullanıcı arama
+    // Kullanıcı adıyla arama
     public Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
     }
